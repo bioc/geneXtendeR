@@ -8,7 +8,7 @@
 #' @param start Lower bound of upstream extension.
 #' @param end Upper bound of upstream extension.
 #'
-#' @return A table of unique genes located under peaks between two upstream extension levels.
+#' @return A data.table of unique genes located under peaks between two upstream extension levels.
 #'
 #' @examples
 #' rat <- readGFF("ftp://ftp.ensembl.org/pub/release-84/gtf/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.84.gtf.gz")
@@ -131,7 +131,8 @@ distinct <- function(organism, start, end) {
         m = regexec("^(?:[^\t]+\t){3}", cmd2)
         first3.cmd2 = unlist(regmatches(cmd2, m))
         finalList = cmd2[!(first3.cmd2 %in% first3.cmd1)]
-        return(finalList)
+        DT <- data.table::as.data.table(do.call("rbind", strsplit(finalList, split = "\t")))
+        return(DT)
    
 	}      
 
