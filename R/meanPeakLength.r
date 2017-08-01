@@ -1,29 +1,31 @@
-#' Produces line plots.
+#' Calculates mean (average) peak length for any genomic region.
 #'
-#' Makes differential line plots showing the differences in the number of genes under peaks at consecutive upstream extension levels.
-#'
+#' Determines the average peak length of all peaks found within some genomic interval (e.g., 0-500 bp upstream of nearest gene for all genes throughout the genome).
+#' 
+#' 
 #' @param organism Object name assigned from readGFF() command.
 #' @param start Lower bound of upstream extension.
 #' @param end Upper bound of upstream extension.
-#' @param by Interval between consecutive extensions.
 #'
-#' @return Creates differential line plots.
+#' @return A vector composed of a single number representing the average peak length found within a genomic interval.
 #'
 #' @examples
 #' rat <- readGFF("ftp://ftp.ensembl.org/pub/release-84/gtf/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.84.gtf.gz")
-#' fpath <- system.file("extdata", "somepeaksfile.txt", package="geneXtendeR")
-#' peaksInput(fpath)
-#' linePlot(rat, 1000, 3000, 100)
+#' sigpeaks <- system.file("extdata", "significantpeaksfile.txt", package="geneXtendeR")
+#' peaksInput(sigpeaks)
+#' meanPeakLength(rat, 0, 500)
 #'
+#' @useDynLib geneXtendeR, .registration = TRUE
 #'
 #' @export
-linePlot <- function(organism, start, end, by) {
- if(!file.exists("peaks.txt")){
-   message("Please run peaksInput() function first!  See ?peaksInput for more information")
- } else {
-	oopts = options(warn=-1)
-	on.exit(options(oopts))
-    geneXtender <- function(upstream) {
+
+  meanPeakLength <- function(organism, start, end) {
+    if(!file.exists("peaks.txt")){
+      message("Please run peaksInput() function first!  See ?peaksInput for more information")
+    } else {
+      oopts = options(warn=-1)
+      on.exit(options(oopts))
+      geneXtender <- function(upstream) {
         messy2 <- dplyr::filter(organism, type == "gene")
         neat <- dplyr::select(messy2, seqid, start, end, strand, gene_id, gene_name)
         pos_exons <- dplyr::filter(neat, strand == "+")
@@ -107,33 +109,28 @@ linePlot <- function(organism, start, end, by) {
         geneXtender.file$seqid = as.numeric(as.character(geneXtender.file$seqid))
         geneXtender.sorted <- dplyr::arrange(geneXtender.file, as.numeric(seqid), start)
         write.table(geneXtender.sorted, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE, sprintf("geneXtender_gtf_%s.bed", upstream))
-    }
-	sapply(seq(start, end, by), geneXtender)
-	xlabs <- as.character(seq(start, end, by))
-	xDeltas <- vapply(seq_along(xlabs)[-1], function(i) paste(xlabs[(i-1):i], collapse = "-"), "")
-	gxFiles <- sprintf("geneXtender_gtf_%s.bed", seq(start, end, by))
-
-
-	run <- function(f1, f2, num) {
-  		.C("extractnumber", f1, f2, num)[[3]]
-	}
-	
-	num = 0
-	numvec <- numeric()
-	for (x in gxFiles) {
-		numbers <- run(f1 = "peaks.txt", f2 = x, as.integer(num))
-		numvec <- append(numvec, numbers)
-	}
-	
-	for (y in numvec) {
-		diffs <- sapply(1:length(numvec), function(i) {numvec[i+1] - numvec[i]})
-	}
-	
-	differences <- diffs[!is.na(diffs)]
-	par(mar = c(8.1,4.1,2.1,2.1))
-	plot(differences, type = "o", col = "blue", xaxt = "n", ylab = "differences", xlab = "")
-	axis(1, at = 1:length(differences), labels = xDeltas, las = 3)
-	mtext(side = 1, "Genomic region (bp)", line = 6.6)
-
-	}
-}
+      }
+      
+      run2 <- function(f1, f2, peakslist) {
+        .C("extractpeaks", f1, f2, peakslist)[[3]]
+      }
+      
+      sapply(c(start, end), geneXtender)
+      twogxFiles <- sprintf("geneXtender_gtf_%s.bed", c(start, end))
+      linelen <- ""  
+      n <- 500000
+      peaksArray <- rep(linelen, n)
+      peaksArray2 <- rep(linelen, n)
+      cmdtmp1 <- run2(f1 = "peaks.txt", f2 = twogxFiles[[1]], as.character(peaksArray))
+      cmdtmp2 <- run2(f1 = "peaks.txt", f2 = twogxFiles[[2]], as.character(peaksArray2))
+      cmd1 <- cmdtmp1[cmdtmp1 != linelen]
+      cmd2 <- cmdtmp2[cmdtmp2 != linelen]
+      m = regexec("^(?:[^\t]+\t){3}", cmd1)
+      first3.cmd1 = unlist(regmatches(cmd1, m))
+      m = regexec("^(?:[^\t]+\t){3}", cmd2)
+      first3.cmd2 = unlist(regmatches(cmd2, m))
+      finalList = cmd2[!(first3.cmd2 %in% first3.cmd1)]
+      DT <- data.table::as.data.table(do.call("rbind", strsplit(finalList, split = "\t")))
+      mean(as.numeric(DT$V3) - as.numeric(DT$V2))
+    }      
+  }
