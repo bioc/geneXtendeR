@@ -2,6 +2,11 @@
 \title{geneXtendeR News}
 \encoding{UTF-8}
 
+\section{Version 1.3.4}{\itemize{
+
+\item Cleanup README and update citation.
+
+}}
 
 \section{Version 1.3.3}{\itemize{
 
