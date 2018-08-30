@@ -49,16 +49,18 @@ library(geneXtendeR)
 
 ```R
 ## try http:// if https:// URLs are not supported
-source("https://bioconductor.org/biocLite.R")
-biocLite("geneXtendeR")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("geneXtendeR")
 ```
 
 After installation, you should always update to the latest available version of `geneXtendeR` by typing `biocLite()`:
 
 ```R
 ## try http:// if https:// URLs are not supported
-source("https://bioconductor.org/biocLite.R")
-biocLite()                  ## R version 3.0 or later
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install()                  ## R version 3.0 or later
 ```
 
 ### Citation

@@ -42,8 +42,9 @@ First, install the \texttt{geneXtendeR} package via:
 
 <<eval=FALSE>>=
 ## try http:// if https:// URLs are not supported
-source("https://bioconductor.org/biocLite.R")
-biocLite("geneXtendeR")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("geneXtendeR")
 @
 
 <<>>=
