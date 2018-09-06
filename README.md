@@ -54,7 +54,7 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("geneXtendeR")
 ```
 
-After installation, you should always update to the latest available version of `geneXtendeR` by typing `biocLite()`:
+After installation, you should always update to the latest available version of `geneXtendeR` by typing `BiocManager::install()`:
 
 ```R
 ## try http:// if https:// URLs are not supported
